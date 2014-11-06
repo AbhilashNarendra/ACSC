@@ -1,0 +1,80 @@
+%M = 2, N = 1, H(2x1)
+snrdb = 0:15;
+snr = 10.^(snrdb./10);
+nr_bits = 500;
+bits = (rand(1, nr_bits) > .5);
+g1 = [1 0;0 1];
+g2 = [1i 0;0 1i];
+g3 = g2^2;
+g4 = g2^3;
+x = zeros(2,251*16);
+for j = 1:16
+    g = g1;
+    h = crandn(2,1);
+    w = crandn(2,1);
+x(:,((j-1)*251)+1) = sqrt(snr(j))*g*h+w;
+for i = 1:250
+    
+    w = crandn(2,1);
+    %if rem(i,50) == 0
+     %   h = crandn(2,1);
+      %  w = crandn(2,1);
+    %end
+    if bits(2*i-1:2*i) == [0 0]
+        g = g*g1;
+        x(:,i+((j-1)*251)+1) = sqrt(snr(j))*g*h+w;
+    elseif bits(2*i-1:2*i) == [0 1]
+        g = g*g2;
+        x(:,i+((j-1)*251)+1) = sqrt(snr(j))*g*h+w;
+    elseif bits(2*i-1:2*i) == [1 0]
+        g = g*g3;
+        x(:,i+((j-1)*251)+1) = sqrt(snr(j))*g*h+w;
+    elseif bits(2*i-1:2*i) == [1 1]
+        g = g*g4;
+        x(:,i+((j-1)*251)+1) = sqrt(snr(j))*g*h+w;
+    end
+end
+end
+gg = [g1 g2 g3 g4];
+g1c = ctranspose(g1);
+g2c = ctranspose(g2);
+g3c = ctranspose(g3);
+g4c = ctranspose(g4);
+ggc = [g1c g2c g3c g4c];
+tr = zeros(1,4);
+z = zeros(1,500*16);
+for j = 1:16
+    %xctp = [real(x(1,(((j-1)*251)+1)))-i*imag(x(1,(((j-1)*251)+1))), real(x(2,(((j-1)*251)+1)))-i*imag(x(2,(((j-1)*251)+1)))];
+    for i = 1:250
+        %xct = [real(x(1,(((j-1)*251)+1)+i))-i*imag(x(1,(((j-1)*251)+1)+i)), real(x(2,(((j-1)*251)+1)+i))-i*imag(x(2,(((j-1)*251)+1)+i))];
+        for ii = 1:4
+            tr(ii) =(trace(ctranspose(x(:,(251*(j-1))+i))*(ggc(:,((ii-1)*2)+1:((ii-1)*2)+2))*x(:,(251*(j-1))+i+1)+ctranspose(x(:,(251*(j-1))+i+1))*gg(:,((ii-1)*2)+1:((ii-1)*2)+2)*(x(:,(251*(j-1))+i)))); 
+        end
+        m = find(tr == max(tr));
+        switch(m)
+            case 1
+                z((2*((250*(j-1))+i))-1:2*((250*(j-1))+i)) = [0 0];%replace i with ((251*(j-1))+i)
+            case 2
+                z((2*((250*(j-1))+i))-1:2*((250*(j-1))+i)) = [0 1];
+            case 3
+                z((2*((250*(j-1))+i))-1:2*((250*(j-1))+i)) = [1 0];
+            case 4
+                z((2*((250*(j-1))+i))-1:2*((250*(j-1))+i)) = [1 1];
+        end
+    end
+end
+
+    pe = zeros(1,16);
+    for ii = 1:16
+        pe(ii) = length(find(bits-(z(500*(ii-1)+1:500*(ii)))))/500;
+        ber(
+    end
+
+    semilogy(snrdb,pe);
+    
+    
+    
+    
+    
+    
+    
